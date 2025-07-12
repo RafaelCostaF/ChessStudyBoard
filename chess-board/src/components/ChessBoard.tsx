@@ -8,6 +8,7 @@ import UndoControls from "./UndoControls.tsx";
 import GameOverModal from "./GameOverModal.tsx";
 import { toSquare } from "./utils.ts";
 import { SquareCoords } from "./types.ts";
+import VoiceControl from "./VoiceControl.tsx";
 import "./ChessBoard.css";
 
 const ChessBoard: React.FC = () => {
@@ -20,7 +21,12 @@ const ChessBoard: React.FC = () => {
   const [availableStyles, setAvailableStyles] = useState<string[]>([]);
   const [showStyleSelector, setShowStyleSelector] = useState(false);
   const [gameOverMessage, setGameOverMessage] = useState<string | null>(null);
-  const [listening, setListening] = useState(true);
+  const [listening, setListening] = useState(false); // default to false, user starts voice explicitly
+  const [moveError, setMoveError] = useState<string | null>(null);
+
+
+  const startListening = () => setListening(true);
+  const stopListening = () => setListening(false);
 
   useEffect(() => {
     fetch("/pieces/index.json")
@@ -33,8 +39,10 @@ const ChessBoard: React.FC = () => {
       .catch(console.error);
   }, []);
 
-  const startListening = () => setListening(true);
-  const stopListening = () => setListening(false);
+  const onMoveCommand = (sanMove: string) => {
+    // Try to make the move from the voice command SAN string
+    attemptMove(sanMove);
+  };
 
   const handleStyleSelect = (style: string) => {
     setStyleName(style);
@@ -92,33 +100,35 @@ const ChessBoard: React.FC = () => {
   };
 
   const attemptMove = (sanOrFrom: string, to?: string) => {
-    let move;
+  let move;
 
-    if (to) {
-      move = game.move({ from: sanOrFrom, to, promotion: "q" });
-    } else {
-      move = game.move(sanOrFrom);
+  if (to) {
+    move = game.move({ from: sanOrFrom, to, promotion: "q" });
+  } else {
+    move = game.move(sanOrFrom);
+  }
+
+  if (move) {
+    setBoard(game.board());
+    setLastMove({ from: move.from, to: move.to });
+    setMoveHistory((prev) => [...prev, move.san]);
+    setMoveError(null); // ✅ Clear previous error
+
+    if (game.isCheckmate()) {
+      const winner = game.turn() === "w" ? "Black" : "White";
+      setGameOverMessage(`Checkmate! ${winner} wins.`);
+    } else if (game.isStalemate()) {
+      setGameOverMessage("Stalemate! It's a draw.");
+    } else if (game.isInsufficientMaterial()) {
+      setGameOverMessage("Draw!");
     }
+  } else {
+    setMoveError(`Illegal move: ${to ? `${sanOrFrom} to ${to}` : sanOrFrom}`);
+  }
 
-    if (move) {
-      setBoard(game.board());
-      setLastMove({ from: move.from, to: move.to });
-      setMoveHistory((prev) => [...prev, move.san]);
-
-      if (game.isCheckmate()) {
-        const winner = game.turn() === "w" ? "Black" : "White";
-        setGameOverMessage(`Checkmate! ${winner} wins.`);
-      } else if (game.isStalemate()) {
-        setGameOverMessage("Stalemate! It's a draw.");
-      } else if (game.isInsufficientMaterial()) {
-        setGameOverMessage("Draw!");
-      }
-    } else {
-      alert(`Illegal move: ${to ? `${sanOrFrom} to ${to}` : sanOrFrom}`);
-    }
-    setSelected(null);
-    setLegalMoves([]);
-  };
+  setSelected(null);
+  setLegalMoves([]);
+};
 
   const undoLastMove = () => {
     if (moveHistory.length > 0) {
@@ -171,11 +181,25 @@ const ChessBoard: React.FC = () => {
           styleName={styleName}
           isLastMoveSquare={isLastMoveSquare}
         />
+        {moveError && (
+          <div style={{ color: "red", marginTop: "8px", fontSize: "14px",textAlign: "center" }}>
+            ⚠️ {moveError}
+          </div>
+        )}
+
 
         <UndoControls
           onUndoLastMove={undoLastMove}
           onUndoAllMoves={undoAllMoves}
           canUndo={moveHistory.length > 0}
+        />
+
+        {/* Voice control UI */}
+        <VoiceControl
+          onMoveCommand={onMoveCommand}
+          listening={listening}
+          startListening={startListening}
+          stopListening={stopListening}
         />
       </div>
 

@@ -31,6 +31,13 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
   const [lastTranscript, setLastTranscript] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const isRecognizingRef = useRef(false);
+  const hasMicErrorRef = useRef(false);
+
+
+  const listeningRef = useRef(listening);
+  useEffect(() => {
+    listeningRef.current = listening;
+  }, [listening]);
 
   useEffect(() => {
     if (!SpeechRecognitionConstructor) {
@@ -38,7 +45,6 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
       return;
     }
 
-    // Permissions check (optional)
     if (navigator.permissions) {
       navigator.permissions
         .query({ name: "microphone" as PermissionName })
@@ -69,42 +75,52 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
     recognition.maxAlternatives = 1;
 
     recognition.onresult = (event: SpeechRecognitionEvent) => {
-      const transcript = event.results[0][0].transcript.toLowerCase().trim();
+      const transcript = event.results[0][0].transcript.trim();
+      console.log("VoiceControl heard:", transcript);
       setLastTranscript(transcript);
       setErrorMessage(null);
+    hasMicErrorRef.current = false; // <- reset mic error flag  
       handleVoiceCommand(transcript);
+      
     };
 
     recognition.onerror = (event: any) => {
-      if (
-        event.error === "not-allowed" ||
-        event.error === "permission-denied"
-      ) {
-        setErrorMessage(
-          "Microphone access denied. Please allow microphone permission in your browser settings."
-        );
-      } else {
-        setErrorMessage(`Speech recognition error: ${event.error}`);
-      }
-      isRecognizingRef.current = false;
-    };
+        console.warn("Speech recognition error:", event.error);
+
+        if (
+            event.error === "not-allowed" ||
+            event.error === "permission-denied"
+        ) {
+            setErrorMessage(
+            "Microphone access denied. Please allow microphone permission in your browser settings."
+            );
+            hasMicErrorRef.current = true; // <-- prevent auto-restarting
+        } else {
+            setErrorMessage(`Speech recognition error: ${event.error}`);
+        }
+
+        isRecognizingRef.current = false;
+        };
+
 
     recognition.onend = () => {
-      isRecognizingRef.current = false;
-      // Auto-restart only if listening flag is true
-      if (listening) {
+    isRecognizingRef.current = false;
+    console.log("Speech recognition ended");
+
+    if (listeningRef.current && !hasMicErrorRef.current) {
+        console.log("Restarting recognition because listening is true");
         try {
-          recognition.start();
-          isRecognizingRef.current = true;
-        } catch {
-          // Ignore if already started
+        recognition.start();
+        isRecognizingRef.current = true;
+        } catch (e) {
+        console.warn("Recognition start error on restart", e);
         }
-      }
+    }
     };
+
 
     recognitionRef.current = recognition;
 
-    // Start recognition if listening initially
     if (listening) {
       try {
         recognition.start();
@@ -120,9 +136,25 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
         isRecognizingRef.current = false;
       }
     };
-    // We only want to run this once, on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+  // Prompt mic permission once to avoid 'not-allowed' later
+  navigator.mediaDevices
+    .getUserMedia({ audio: true })
+    .then((stream) => {
+      stream.getTracks().forEach((track) => track.stop()); // close mic
+      console.log("Microphone access granted via getUserMedia");
+    })
+    .catch((err) => {
+      console.warn("Microphone access denied via getUserMedia", err);
+      setErrorMessage(
+        "Microphone access denied. Please allow it in your browser settings."
+      );
+    });
+}, []);
+
 
   useEffect(() => {
     if (!recognitionRef.current) return;
@@ -147,7 +179,7 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
   const handleVoiceCommand = (command: string) => {
     let sanMove = command.trim();
 
-    if (sanMove.startsWith("move ")) {
+    if (sanMove.toLowerCase().startsWith("move ")) {
       sanMove = sanMove.slice(5).trim();
     }
 
@@ -179,6 +211,11 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
 
     sanMove = sanMove.replace(/([BNRQK])\s+([a-h][1-8])/gi, "$1$2");
     sanMove = sanMove.replace(/([BNRQK])\s*x\s*([a-h][1-8])/gi, "$1x$2");
+
+    // --- FIX: Capitalize pieces but keep squares lowercase ---
+    sanMove = sanMove.replace(/([bnrqk])/gi, (m) => m.toUpperCase()); // pieces uppercase
+    sanMove = sanMove.replace(/([a-h])([1-8])/gi, (m, file, rank) => file.toLowerCase() + rank); // squares lowercase
+
     sanMove = sanMove.trim();
 
     if (sanMove.length === 0) {
@@ -213,10 +250,19 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
       </div>
 
       {errorMessage && (
-        <div style={{ marginTop: 4, color: "red", fontSize: 12 }} role="alert">
-          ⚠️ {errorMessage}
+        <div
+            style={{
+            marginTop: 4,
+            color: "red",
+            fontSize: 12,
+            textAlign: "center", // <-- Added this line
+            }}
+            role="alert"
+        >
+            ⚠️ {errorMessage}
         </div>
-      )}
+        )}
+
     </div>
   );
 };
