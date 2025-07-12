@@ -1,0 +1,38 @@
+.sidebar {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  padding: 16px;
+  max-height: 500px;
+  width: 180px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar h3 {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+}
+
+.move-scroll-area {
+  overflow-y: auto;
+  flex-grow: 1;
+  padding-right: 4px; /* space for scrollbar */
+}
+
+.move-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.move-list li {
+  margin-bottom: 6px;
+  font-size: 14px;
+  line-height: 1.4;
+}
+

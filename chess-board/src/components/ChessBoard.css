@@ -1,0 +1,557 @@
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 64px);
+  grid-template-rows: repeat(8, 64px);
+  border: 4px solid #222;
+  background-color: #b58863;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
+}
+
+.square {
+  width: 64px;
+  height: 64px;
+  font-size: 40px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  user-select: none;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.white {
+  background-color: #f0d9b5;
+}
+
+.black {
+  background-color: #b58863;
+}
+
+.square:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.selected::after {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  right: 4px;
+  bottom: 4px;
+  /* border-radius: 8px; */
+  box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.4);
+  pointer-events: none;
+}
+
+.legal::before {
+  content: "";
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background-color: rgba(0, 255, 0, 0.4);
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.style-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.style-option {
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 0.5rem;
+  text-align: center;
+  width: 100px;
+  transition: border 0.2s;
+  background: #f8f8f8;
+
+  /* NEW: force box sizing and clipping */
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+
+.style-option:hover {
+  border-color: #aaa;
+}
+
+.style-option.selected {
+  border-color: #0074d9;
+  background: #eaf3ff;
+}
+
+.preview-row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 4px;
+
+  /* NEW: limit height to contain images */
+  max-height: 40px;
+  overflow: hidden;
+}
+
+.preview-piece {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
+  max-width: 100%;  /* prevent overflow */
+  max-height: 100%;
+}
+
+
+.style-name {
+  font-size: 0.75rem;
+  color: #333;
+}
+
+.change-style-btn {
+  margin-bottom: 1rem;
+  padding: 6px 12px;
+  background-color: #0074d9;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.change-style-btn:hover {
+  background-color: #005fa3;
+}
+
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.modal {
+  background: white;
+  border-radius: 10px;
+  padding: 20px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.modal-title {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  font-size: 1.2rem;
+  cursor: pointer;
+}
+
+.style-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: center;
+}
+
+.style-option {
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 0.5rem;
+  text-align: center;
+  width: 100px;
+  transition: border 0.2s;
+  background: #f8f8f8;
+}
+
+.style-option:hover {
+  border-color: #aaa;
+}
+
+.style-option.selected {
+  border-color: #0074d9;
+  background: #eaf3ff;
+}
+
+.preview-row {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.preview-piece {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+
+.style-name {
+  font-size: 0.75rem;
+  color: #333;
+}
+
+/* Ensure the piece image fits perfectly inside board squares */
+.piece {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Preview images inside the modal */
+.preview-piece {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
+}
+
+
+.top-bar {
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.change-style-btn.full-width {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 10px 15px;
+  cursor: pointer;
+  background-color: #b58863;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: background-color 0.3s ease;
+}
+
+.change-style-btn.full-width:hover {
+  background-color: #b49174;
+}
+
+.knight-icon {
+  width: 24px;
+  height: 24px;
+  margin-left: 10px;
+  filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));
+  user-select: none;
+}
+
+.top-bar {
+  margin-bottom: 10px;
+  width: 100%;
+}
+
+.change-style-btn.full-width {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+  font-size: 1.1rem;
+  padding: 10px 15px;
+  cursor: pointer;
+  background-color: #b58863;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+  transition: background-color 0.3s ease;
+}
+
+.change-style-btn.full-width:hover {
+  background-color: #af8f75;
+}
+
+.knight-icon {
+  width: 24px;
+  height: 24px;
+  margin-left: 10px;
+  filter: drop-shadow(0 0 1px rgba(0,0,0,0.5));
+  user-select: none;
+}
+
+.chess-container {
+  display: flex;
+  justify-content: center; /* Center the whole content block */
+  padding: 20px;
+}
+
+.board-column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.top-bar {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+.change-style-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.knight-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.history-column {
+  margin-left: 20px; /* Space between board and move history */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+}
+
+.page-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
+.game-over-banner {
+  background-color: #ffe5e5;
+  color: #b00020;
+  border: 1px solid #b00020;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  text-align: center;
+  font-weight: bold;
+}
+
+.game-over-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999; /* above everything */
+}
+
+.game-over-modal {
+  background: white;
+  border-radius: 12px;
+  padding: 24px 32px;
+  max-width: 320px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.game-over-text {
+  font-size: 1.25rem;
+  margin-bottom: 20px;
+  font-weight: 600;
+  color: #b00020;
+}
+
+.restart-btn {
+  background-color: #b00020;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.restart-btn:hover {
+  background-color: #7a000f;
+}
+
+.close-modal-btn {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #b00020;
+  font-weight: bold;
+  line-height: 1;
+}
+
+.undo-buttons {
+  margin-top: 12px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+}
+
+.undo-buttons button {
+  background-color: #4a4a4a;
+  color: white;
+  border: none;
+  padding: 8px 14px;
+  font-size: 0.9rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.undo-buttons button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+.undo-buttons button:hover:not(:disabled) {
+  background-color: #2e2e2e;
+}
+
+.board-with-labels {
+  display: flex;
+  flex-direction: row;
+}
+
+.rank-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-right: 4px;
+  font-weight: bold;
+  user-select: none;
+}
+
+.rank-label {
+  height: 50px; /* match square size */
+  line-height: 50px;
+  text-align: center;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 50px);
+  grid-template-rows: repeat(8, 50px);
+  gap: 0;
+  user-select: none;
+}
+
+.file-labels {
+  display: grid;
+  grid-template-columns: repeat(8, 50px);
+  margin-left: 30px; /* offset to align under the board */
+  font-weight: bold;
+  user-select: none;
+}
+
+.file-label {
+  text-align: center;
+  height: 20px;
+  line-height: 20px;
+}
+
+.board-with-labels {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  user-select: none;
+}
+
+.rank-labels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  margin-right: 4px;
+  font-weight: bold;
+  font-size: 18px;
+  color: #333;
+}
+
+.rank-label {
+  width: 24px;
+  height: 64px; /* match square height */
+  line-height: 64px;
+  text-align: center;
+  user-select: none;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(8, 64px);
+  grid-template-rows: repeat(8, 64px);
+  border: 4px solid #222;
+  background-color: #b58863;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.25);
+  user-select: none;
+}
+
+.file-labels {
+  display: grid;
+  grid-template-columns: repeat(8, 64px);
+  margin-left: 28px; /* align with board start */
+  margin-top: 4px;
+  font-weight: bold;
+  font-size: 18px;
+  color: #333;
+  user-select: none;
+}
+
+.file-label {
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+}
+
+/* Your existing square styling stays the same */
+.square {
+  width: 64px;
+  height: 64px;
+  font-size: 40px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
