@@ -179,6 +179,12 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
   const handleVoiceCommand = (command: string) => {
     let sanMove = command.trim();
 
+    // Reject direct SAN inputs like "Nf3", but allow "knight f3"
+    if (/^[NBRQK][a-h][1-8]$/i.test(sanMove)) {
+      alert(`Direct SAN moves like "${sanMove}" are not allowed. Please say the move like "knight f3".`);
+      return;
+    }
+
     if (sanMove.toLowerCase().startsWith("move ")) {
       sanMove = sanMove.slice(5).trim();
     }
@@ -212,9 +218,9 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
     sanMove = sanMove.replace(/([BNRQK])\s+([a-h][1-8])/gi, "$1$2");
     sanMove = sanMove.replace(/([BNRQK])\s*x\s*([a-h][1-8])/gi, "$1x$2");
 
-    // --- FIX: Capitalize pieces but keep squares lowercase ---
-    sanMove = sanMove.replace(/([bnrqk])/gi, (m) => m.toUpperCase()); // pieces uppercase
-    sanMove = sanMove.replace(/([a-h])([1-8])/gi, (m, file, rank) => file.toLowerCase() + rank); // squares lowercase
+    // Capitalize pieces, lowercase squares
+    sanMove = sanMove.replace(/([bnrqk])/gi, (m) => m.toUpperCase());
+    sanMove = sanMove.replace(/([a-h])([1-8])/gi, (m, file, rank) => file.toLowerCase() + rank);
 
     sanMove = sanMove.trim();
 
@@ -225,6 +231,7 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
 
     onMoveCommand(sanMove);
   };
+
 
   return (
     <div style={{ margin: "10px", userSelect: "none" }}>
