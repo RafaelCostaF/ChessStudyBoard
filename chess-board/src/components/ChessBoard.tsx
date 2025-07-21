@@ -23,6 +23,7 @@ const ChessBoard: React.FC = () => {
   const [gameOverMessage, setGameOverMessage] = useState<string | null>(null);
   const [listening, setListening] = useState(false); // default to false, user starts voice explicitly
   const [moveError, setMoveError] = useState<string | null>(null);
+  const [language, setLanguage] = useState("en-US");
 
 
   const startListening = () => setListening(true);
@@ -195,12 +196,34 @@ const ChessBoard: React.FC = () => {
         />
 
         {/* Voice control UI */}
-        <VoiceControl
-          onMoveCommand={onMoveCommand}
-          listening={listening}
-          startListening={startListening}
-          stopListening={stopListening}
-        />
+        <div>
+          <label htmlFor="language-select" style={{ fontSize: "14px" }}>
+            🌍 Recognition Language:{" "}
+          </label>
+          <select
+            id="language-select"
+            value={language}
+            onChange={(e) => setLanguage(e.target.value)}
+            style={{ marginBottom: "10px", fontSize: "14px" }}
+          >
+            <option value="en-US">English (US)</option>
+            <option value="en-GB">English (UK)</option>
+            <option value="es-ES">Español (España)</option>
+            <option value="fr-FR">Français</option>
+            <option value="de-DE">Deutsch</option>
+            <option value="it-IT">Italiano</option>
+            <option value="pt-BR">Português (Brasil)</option>
+            <option value="ja-JP">日本語</option>
+          </select>
+
+          <VoiceControl
+            onMoveCommand={onMoveCommand}
+            listening={listening}
+            startListening={startListening}
+            stopListening={stopListening}
+            language={language} // ✅ pass selected language
+          />
+        </div>
       </div>
 
       <div className="history-column">

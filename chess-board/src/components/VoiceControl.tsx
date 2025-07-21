@@ -5,7 +5,9 @@ interface VoiceControlProps {
   listening: boolean;
   startListening: () => void;
   stopListening: () => void;
+  language?: string; // <-- Optional prop for recognition language
 }
+
 
 interface SpeechRecognition extends EventTarget {
   lang: string;
@@ -26,6 +28,7 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
   listening,
   startListening,
   stopListening,
+  language = "en-US", // <-- ✅ Default to "en-US"
 }) => {
   const recognitionRef = useRef<SpeechRecognition | null>(null);
   const [lastTranscript, setLastTranscript] = useState<string | null>(null);
@@ -70,7 +73,7 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
     }
 
     const recognition = new SpeechRecognitionConstructor();
-    recognition.lang = "en-US";
+    recognition.lang = language; // ✅ Use prop instead of hardcoded value
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
 
@@ -189,25 +192,63 @@ const VoiceControl: React.FC<VoiceControlProps> = ({
       sanMove = sanMove.slice(5).trim();
     }
 
-    const pieceMap: Record<string, string> = {
-      pawn: "",
-      bishop: "B",
+    // Map of all accepted synonyms (multilingual) to SAN notation
+    const synonymMap: Record<string, string> = {
+      // Knight
       knight: "N",
+      night: "N",
+      cavalo: "N",        // Portuguese
+      caballo: "N",       // Spanish
+      cheval: "N",        // French
+      pferd: "N",         // German
+      // Bishop
+      bishop: "B",
+      bispo: "B",         // Portuguese
+      alfil: "B",         // Spanish
+      fou: "B",           // French
+      läufer: "B",        // German
+      // Rook
       rook: "R",
+      torre: "R",         // Portuguese/Spanish
+      tour: "R",          // French
+      turm: "R",          // German
+      // Queen
       queen: "Q",
+      dama: "Q",          // Portuguese/Spanish
+      reine: "Q",         // French
+      königin: "Q",       // German
+      // King
       king: "K",
+      rei: "K",           // Portuguese
+      rey: "K",           // Spanish
+      roi: "K",           // French
+      könig: "K",         // German
+      // Pawn
+      pawn: "",           // SAN uses empty string for pawn
+      peão: "",           // Portuguese
+      peon: "",           // Spanish
+      pion: "",           // French/German
     };
 
-    const pieceNamePattern = new RegExp(
-      `\\b(${Object.keys(pieceMap).join("|")})\\b`,
-      "gi"
-    );
+
+    // Create dynamic pattern based on all known synonyms
+  const pieceNamePattern = new RegExp(
+    `\\b(${Object.keys(synonymMap).join("|")})\\b`,
+    "gi"
+  );
+
+  // Replace all synonyms with their SAN equivalent
+  sanMove = sanMove.replace(pieceNamePattern, (match) => {
+    return synonymMap[match.toLowerCase()] || "";
+  });
+
 
     sanMove = sanMove.replace(pieceNamePattern, (match) => {
       return pieceMap[match.toLowerCase()] || "";
     });
 
-    sanMove = sanMove.replace(/\b(takes|capture|captures)\b/gi, "x");
+    sanMove = sanMove.replace(/\b(takes|take|capture|captures|captura|prende|nimmt)\b/gi, "x");
+
 
     if (/king castle kingside/i.test(command)) {
       sanMove = "O-O";
